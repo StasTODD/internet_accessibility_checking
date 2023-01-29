@@ -1,0 +1,11 @@
+api_telegram_token: 1
+admins_ids:
+  - stastodd: 2
+internet_accessibility_checking_params:
+  enable_status: True
+  telegram_bot_notification: True
+  check_address1: 8.8.8.8
+  check_address2: 1.1.1.1
+  requests_per_attempt: 2
+  pause_seconds_between_attempts: 30
+  stop_inet_filename: stop_inet_datetime.txt
