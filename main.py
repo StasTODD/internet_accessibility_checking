@@ -1,4 +1,4 @@
-#!/home/stastodd/projects/internet_accessibility_checking/venv/bin/python3.8
+#!/home/stastodd/projects/internet_accessibility_checking/venv/bin/python
 
 import yaml
 import asyncio
@@ -33,7 +33,8 @@ def downtime_message_creator(stop_inet_file_data, current_datetime):
     downtime_from = datetime.fromtimestamp(int(stop_inet_file_data))
     downtime_to = datetime.fromtimestamp(int(current_datetime))
     return f"Currently, the Internet is running!\n" \
-           f"Previously it work was down:\n" \
+           f"\n" \
+           f"Internet was unavailable during the period:\n" \
            f"from: {downtime_from.strftime('%Y-%m-%d, %H:%M:%S')}\n" \
            f"to:     {downtime_to.strftime('%Y-%m-%d, %H:%M:%S')}"
 
@@ -69,6 +70,21 @@ async def are_alive(*addresses, **kwargs):
 
 
 async def main(config_data):
+    """
+    Ping functionality is based on https://github.com/ValentinBELYN/icmplib
+
+    :param config_data: {
+        'admins_ids': [{'stastodd': 1}, {'username': 2}],
+        'api_telegram_token': '3',
+        'internet_accessibility_checking_params': {'check_address1': '8.8.8.8',
+                                                   'check_address2': '1.1.1.1',
+                                                   'enable_status': True,
+                                                   'pause_seconds_between_attempts': 30,
+                                                   'requests_per_attempt': 2,
+                                                   'stop_inet_filename': 'stop_inet_datetime.txt',
+                                                   'telegram_bot_notification': True}
+                        }
+    """
     # Get all config params:
     api_telegram_token = config_data.get("api_telegram_token")
     admins_ids = config_data.get("admins_ids", list())
@@ -90,14 +106,14 @@ async def main(config_data):
         return
 
     # Ping procedure:
-    kwargs = {"count": number_of_requests,
-              "privileged": False,
-              "timeout": 3}
+    kwargs = {"count": number_of_requests,  # Number of ping to perform.
+              "privileged": False,  # Linux sudo access. Default value is False and tt works without restrictions.
+              "timeout": 3}  # Maximum waiting time for receiving a reply in seconds.
 
     while enable_status:
         ping_result = await are_alive([check_address1, check_address2], **kwargs)  # [True, False]
 
-        # Check that start_inet_filename and stop_inet_filename files are exist. If no, create:
+        # Check that stop_inet_filename files are exist. If no, create:
         if not os.path.isfile(stop_inet_filename):
             with open(stop_inet_filename, "w") as file:
                 file.write("\n")
